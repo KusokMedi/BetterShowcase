@@ -79,7 +79,7 @@ public:
     static PauseLayer* getPauseLayer();
 
     Mod* mod = Mod::get();
-    geode::Popup<>* layer = nullptr;
+    CCNode* layer = nullptr;
 
     Macro macro;
     Renderer renderer;

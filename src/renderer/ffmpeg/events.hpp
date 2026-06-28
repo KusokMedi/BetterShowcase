@@ -5,6 +5,15 @@
 #include <Geode/loader/Event.hpp>
 
 namespace ffmpeg::events {
+
+// Stub for Geode 5.x compatibility
+// FFmpeg events will not work until ffmpeg-api mod is properly integrated
+template<typename T>
+inline void postEvent(T& event) {
+    // Events are currently not functional - requires ffmpeg-api mod update for Geode 5.x
+    // This is a temporary stub to allow compilation
+}
+
 namespace impl {
 #define DEFAULT_RESULT_ERROR geode::Err("Event was not handled")
 
@@ -126,13 +135,13 @@ class Recorder {
 public:
     Recorder() {
         impl::CreateRecorderEvent createEvent;
-        createEvent.post();
+        postEvent(createEvent);
         m_ptr = static_cast<impl::Dummy*>(createEvent.getPtr());
     }
 
     ~Recorder() {
         impl::DeleteRecorderEvent deleteEvent(m_ptr);
-        deleteEvent.post();
+        postEvent(deleteEvent);
     }
 
     bool isValid() const {return m_ptr != nullptr;}
@@ -150,7 +159,7 @@ public:
      */
     geode::Result<> init(RenderSettings const& settings) {
         impl::InitRecorderEvent initEvent(m_ptr, &settings);
-        initEvent.post();
+        postEvent(initEvent);
         return initEvent.getResult();
     }
     /**
@@ -160,7 +169,8 @@ public:
      * releases allocated resources, and properly closes the output file.
      */
     void stop() {
-        impl::StopRecorderEvent(m_ptr).post();
+        impl::StopRecorderEvent stopEvent(m_ptr);
+        postEvent(stopEvent);
     }
 
     /**
@@ -179,7 +189,7 @@ public:
     geode::Result<> writeFrame(const std::vector<uint8_t>& frameData) {
         static auto writeFrame = []{
             impl::GetWriteFrameFunctionEvent event;
-            event.post();
+            postEvent(event);
             return event.getFunction();
         }();
         if (!writeFrame) return geode::Err("Failed to call writeFrame function.");
@@ -196,7 +206,7 @@ public:
      */
     static std::vector<std::string> getAvailableCodecs() {
         impl::CodecRecorderEvent codecEvent;
-        codecEvent.post();
+        postEvent(codecEvent);
         return codecEvent.getCodecs();
     }
 private:
@@ -222,7 +232,7 @@ public:
      */
     static geode::Result<> mixVideoAudio(std::filesystem::path const& videoFile, std::filesystem::path const& audioFile, std::filesystem::path const& outputMp4File) {
         impl::MixVideoAudioEvent mixEvent(videoFile, audioFile, outputMp4File);
-        mixEvent.post();
+        postEvent(mixEvent);
         return mixEvent.getResult();
     }
 
@@ -241,7 +251,7 @@ public:
      */
     static geode::Result<> mixVideoRaw(std::filesystem::path const& videoFile, const std::vector<float>& raw, std::filesystem::path const& outputMp4File) {
         impl::MixVideoRawEvent mixEvent(videoFile, raw, outputMp4File);
-        mixEvent.post();
+        postEvent(mixEvent);
         return mixEvent.getResult();
     }
 };
